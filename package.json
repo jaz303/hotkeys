@@ -1,6 +1,6 @@
 {
   "name": "hotkeys",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Hotkey manager based on useCapture; IE9+.",
   "main": "index.js",
   "dependencies": {},
