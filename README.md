@@ -1,0 +1,3 @@
+# hotkeys
+
+A hotkey manager.

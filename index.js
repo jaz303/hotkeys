@@ -1,17 +1,8 @@
-var du = require('domutil');
-
-module.exports = Hotkeys;
-
-function Hotkeys(doc) {
-
-	this.document = doc || document;
-
-	du.bind(this.document.body, 'keypress', function(evt) {
-		console.log("press");
-	}, true);
-
-}
-
-Hotkeys.prototype.on = function(combo, handler) {
-
-}
+module.exports = {
+	defaultKeycodes 	: require('./lib/default_keycodes'),
+	Dispatcher 			: require('./lib/Dispatcher'),
+	Hotkey 				: require('./lib/Hotkey'),
+	keycodes 			: require('./lib/keycodes'),
+	Keymap 				: require('./lib/Keymap'),
+	parseKeyCombo		: require('./lib/parse_key_combo')
+};

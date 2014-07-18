@@ -1,15 +1,23 @@
-var Hotkeys = require('..');
+var hotkeys = require('..');
 
 window.init = function() {
 
-	var bindings = new Hotkeys();
+	if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+		hotkeys.defaultKeycodes('firefox');
+	}
 
-	bindings.on('cmd shift a', function() {
-		console.log("action 1");
+	var bindings = new hotkeys.Dispatcher();
+
+	bindings.on('cmd -', function() { console.log("minus!"); });
+	bindings.on('cmd =', function() { console.log("equals!"); });
+	bindings.on('cmd ;', function() { console.log("semi!"); });
+
+	bindings.on('ctrl a', function() {
+		console.log("action 2");
 	});
 
-	bindings.on('cmd ctl z', function() {
-		console.log("action 2");
+	bindings.on('cmd return', function() {
+		console.log("BOOM");
 	});
 
 }

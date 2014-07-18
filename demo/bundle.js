@@ -1,305 +1,366 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var Hotkeys = require('..');
+var hotkeys = require('..');
 
 window.init = function() {
 
-	var bindings = new Hotkeys();
+	if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+		hotkeys.defaultKeycodes('firefox');
+	}
 
-	bindings.on('cmd shift a', function() {
-		console.log("action 1");
+	var bindings = new hotkeys.Dispatcher();
+
+	bindings.on('cmd -', function() { console.log("minus!"); });
+	bindings.on('cmd =', function() { console.log("equals!"); });
+	bindings.on('cmd ;', function() { console.log("semi!"); });
+
+	bindings.on('ctrl a', function() {
+		console.log("action 2");
 	});
 
-	bindings.on('cmd ctl z', function() {
-		console.log("action 2");
+	bindings.on('cmd return', function() {
+		console.log("BOOM");
 	});
 
 }
 },{"..":2}],2:[function(require,module,exports){
-var du = require('domutil');
+module.exports = {
+	defaultKeycodes 	: require('./lib/default_keycodes'),
+	Dispatcher 			: require('./lib/Dispatcher'),
+	Hotkey 				: require('./lib/Hotkey'),
+	keycodes 			: require('./lib/keycodes'),
+	Keymap 				: require('./lib/Keymap'),
+	parseKeyCombo		: require('./lib/parse_key_combo')
+};
+},{"./lib/Dispatcher":3,"./lib/Hotkey":4,"./lib/Keymap":5,"./lib/default_keycodes":6,"./lib/keycodes":7,"./lib/parse_key_combo":8}],3:[function(require,module,exports){
+module.exports = Dispatcher;
 
-module.exports = Hotkeys;
+var Keymap          = require('./Keymap');
+var parseKeyCombo   = require('./parse_key_combo');
 
-function Hotkeys(doc) {
+function Dispatcher(el, keymap) {
+    this._root = el || document.body;
+    this._keymap = keymap || new Keymap();
+    this._root.addEventListener('keydown', this._dispatch.bind(this), true);
+}
 
-	this.document = doc || document;
+Dispatcher.prototype.getKeymap = function() {
+    return this._keymap;
+}
 
-	du.bind(this.document.body, 'keypress', function(evt) {
-		console.log("press");
-	}, true);
+Dispatcher.prototype.on = function(hotkey, fn) {
+
+    if (typeof hotkey === 'string') {
+        hotkey = parseKeyCombo(hotkey);
+    }
+
+    return this._keymap.bind(hotkey, fn);
 
 }
 
-Hotkeys.prototype.on = function(combo, handler) {
+Dispatcher.prototype._dispatch = function(evt) {
+
+    var binding = this._keymap.bindingForEvent(evt);
+    if (binding) {
+        evt.stopPropagation();
+        evt.preventDefault();
+        binding.action();
+    }
 
 }
-},{"domutil":9}],3:[function(require,module,exports){
-if (typeof window.DOMTokenList === 'undefined') {
+},{"./Keymap":5,"./parse_key_combo":8}],4:[function(require,module,exports){
+module.exports = Hotkey;
 
-	// Constants from jQuery
-	var rclass = /[\t\r\n]/g;
-	var core_rnotwhite = /\S+/g;
+function Hotkey() {
+    this.ch             = null;
+    this.alt            = false;
+    this.ctrl           = false;
+    this.meta           = false;
+    this.shift          = false;
+    this.allowRepeat    = true;
+}
 
-	// from jQuery
-	exports.hasClass = function(ele, className) {
-	    className = " " + className + " ";
-	    return (" " + ele.className + " ").replace(rclass, " ").indexOf(className) >= 0;
-	}
+Hotkey.prototype.matchesHotkey = function(key) {
+    return this.ch === key.ch
+        && this.alt === key.alt
+        && this.ctrl === key.ctrl
+        && this.meta === key.meta
+        && this.shift === key.shift
+        && this.allowRepeat === key.allowRepeat;
+}
 
-	exports.addClass = function(ele, value) {
-	    var classes = (value || "").match(core_rnotwhite) || [],
-	            cur = ele.className ? (" " + ele.className + " ").replace(rclass, " ") : " ";
+Hotkey.prototype.matchesEvent = function(ch, evt) {
+    return ch === this.ch
+        && evt.altKey === this.alt
+        && evt.ctrlKey === this.ctrl
+        && evt.metaKey === this.meta
+        && evt.shiftKey === this.shift
+        && (!evt.repeat || this.allowRepeat)
+}
+},{}],5:[function(require,module,exports){
+module.exports = Keymap;
 
-	    if (cur) {
-	        var j = 0, clazz;
-	        while ((clazz = classes[j++])) {
-	            if (cur.indexOf(" " + clazz + " ") < 0) {
-	                cur += clazz + " ";
-	            }
-	        }
-	        ele.className = cur.trim();
-	    }
-	}
+var defaultKeycodes = require('./default_keycodes');
+var parseKeyCombo = require('./parse_key_combo');
 
-	exports.removeClass = function(ele, value) {
-	    var classes = (value || "").match(core_rnotwhite) || [],
-	            cur = ele.className ? (" " + ele.className + " ").replace(rclass, " ") : " ";
+function Keymap(keycodes) {
+    this._keycodes = keycodes || defaultKeycodes();
+    this._map = {};
+}
 
-	    if (cur) {
-	        var j = 0, clazz;
-	        while ((clazz = classes[j++])) {
-	            while (cur.indexOf(" " + clazz + " ") >= 0) {
-	                cur = cur.replace(" " + clazz + " ", " ");
-	            }
-	            ele.className = value ? cur.trim() : "";
-	        }
-	    }
-	}
+Keymap.prototype.bind = function(hotkey, action) {
+    
+    var binding = new Binding(this, hotkey, action);
 
-	exports.toggleClass = function(ele, value) {
-	    var classes = (value || "").match(core_rnotwhite) || [],
-	            cur = ele.className ? (" " + ele.className + " ").replace(rclass, " ") : " ";
+    var forChar = this._map[hotkey.ch] || (this._map[hotkey.ch] = []);
+    forChar.push(binding);
 
-	    if (cur) {
-	        var j = 0, clazz;
-	        while ((clazz = classes[j++])) {
-	            var removeCount = 0;
-	            while (cur.indexOf(" " + clazz + " ") >= 0) {
-	                cur = cur.replace(" " + clazz + " ", " ");
-	                removeCount++;
-	            }
-	            if (removeCount === 0) {
-	                cur += clazz + " ";
-	            }
-	            ele.className = cur.trim();
-	        }
-	    }
-	}
-
-} else {
-
-	exports.hasClass = function(el, className) {
-	    return el.classList.contains(className);
-	}
-
-	exports.addClass = function(el, classes) {
-	    if (classes.indexOf(' ') >= 0) {
-	        classes.split(/\s+/).forEach(function(c) {
-	            el.classList.add(c);
-	        });
-	    } else {
-	        el.classList.add(classes);
-	    }
-	}
-
-	exports.removeClass = function(el, classes) {
-	    if (classes.indexOf(' ') >= 0) {
-	        classes.split(/\s+/).forEach(function(c) {
-	            el.classList.remove(c);
-	        });
-	    } else {
-	        el.classList.remove(classes);
-	    }
-	}
-
-	exports.toggleClass = function(el, classes) {
-	    if (classes.indexOf(' ') >= 0) {
-	        classes.split(/\s+/).forEach(function(c) {
-	            el.classList.toggle(c);
-	        });
-	    } else {
-	        el.classList.toggle(classes);
-	    }
-	}
+    return binding;
 
 }
 
-},{}],4:[function(require,module,exports){
-var matchesSelector = require('./matches_selector').matchesSelector;
+Keymap.prototype.remove = function(binding) {
 
-var bind = null, unbind = null;
+    var forChar = this._map[binding.hotkey.ch];
+    if (!forChar) return;
 
-if (typeof window.addEventListener === 'function') {
+    var ix = forChar.indexOf(binding);
+    if (ix >= 0) {
+        forChar.splice(ix, 1);
+    }
 
-	bind = function(el, evtType, cb, useCapture) {
-		el.addEventListener(evtType, cb, useCapture || false);
-		return cb;
+}
+
+Keymap.prototype.bindingForEvent = function(evt) {
+
+    var ch = this._keycodes.keyIdForCode(evt.keyCode);
+    if (!ch) {
+        return null;
+    }
+
+    var forChar = this._map[ch];
+    if (!forChar) return;
+
+    for (var i = 0; i < forChar.length; ++i) {
+        if (forChar[i].hotkey.matchesEvent(ch, evt)) {
+            return forChar[i];
+        }
+    }
+
+    return null;
+
+}
+
+function Binding(keymap, hotkey, action) {
+    this.keymap = keymap;
+    this.hotkey = hotkey;
+    this.action = action;
+}
+
+Binding.prototype.remove = function() {
+    this.keymap.removeBinding(this);
+}
+},{"./default_keycodes":6,"./parse_key_combo":8}],6:[function(require,module,exports){
+var keycodes = require('./keycodes');
+
+var defaults = keycodes.defaults;
+
+module.exports = function(newDefaults) {
+
+	if (!newDefaults) {
+		return defaults;
 	}
 
-	unbind = function(el, evtType, cb, useCapture) {
-		el.removeEventListener(evtType, cb, useCapture || false);
-		return cb;
+	if (typeof newDefaults === 'string') {
+		newDefaults = keycodes[newDefaults];
 	}
 
-} else if (typeof window.attachEvent === 'function') {
-
-	bind = function(el, evtType, cb, useCapture) {
-		
-		function handler(evt) {
-			evt = evt || window.event;
-			
-			if (!evt.preventDefault) {
-				evt.preventDefault = function() { evt.returnValue = false; }
-			}
-			
-			if (!evt.stopPropagation) {
-				evt.stopPropagation = function() { evt.cancelBubble = true; }
-			}
-
-			cb.call(el, evt);
-		}
-		
-		el.attachEvent('on' + evtType, handler);
-		return handler;
-	
-	}
-
-	unbind = function(el, evtType, cb, useCapture) {
-		el.detachEvent('on' + evtType, cb);
-		return cb;
-	}
+	defaults = newDefaults;
 
 }
+},{"./keycodes":7}],7:[function(require,module,exports){
+// based on http://www.javascripter.net/faq/keycodes.htm
 
-function delegate(el, evtType, selector, cb, useCapture) {
-	return bind(el, evtType, function(evt) {
-		var currTarget = evt.target;
-		while (currTarget && currTarget !== el) {
-			if (matchesSelector(selector, currTarget)) {
-				evt.delegateTarget = currTarget;
-				cb.call(el, evt);
-				break;
-			}
-			currTarget = currTarget.parentNode;
-		}
-	}, useCapture);
-}
+function Mapping(extras) {
+    this._codeToId = new Globals();
+    this._idToCode = new GlobalsReverse();
 
-function bind_c(el, evtType, cb, useCapture) {
-	cb = bind(el, evtType, cb, useCapture);
-
-	var removed = false;
-	return function() {
-		if (removed) return;
-		removed = true;
-		unbind(el, evtType, cb, useCapture);
-		el = cb = null;
-	}
-}
-
-function delegate_c(el, evtType, selector, cb, useCapture) {
-	cb = delegate(el, evtType, selector, cb, useCapture);
-
-	var removed = false;
-	return function() {
-		if (removed) return;
-		removed = true;
-		unbind(el, evtType, cb, useCapture);
-		el = cb = null;
-	}
-}
-
-function stop(evt) {
-	evt.preventDefault();
-	evt.stopPropagation();
-}
-
-exports.bind = bind;
-exports.unbind = unbind;
-exports.delegate = delegate;
-exports.bind_c = bind_c;
-exports.delegate_c = delegate_c;
-exports.stop = stop;
-},{"./matches_selector":6}],5:[function(require,module,exports){
-exports.setRect = function(el, x, y, width, height) {
-	el.style.left = x + 'px';
-    el.style.top = y + 'px';
-    el.style.width = width + 'px';
-    el.style.height = height + 'px';
-}
-
-exports.setPosition = function(el, x, y) {
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-}
-
-exports.setSize = function(el, width, height) {
-    el.style.width = width + 'px';
-    el.style.height = height + 'px';
-}
-},{}],6:[function(require,module,exports){
-var proto = window.Element.prototype;
-var nativeMatch = proto.webkitMatchesSelector
-					|| proto.mozMatchesSelector
-					|| proto.msMatchesSelector
-					|| proto.oMatchesSelector;
-
-if (nativeMatch) {
-	
-	exports.matchesSelector = function(selector, el) {
-		return nativeMatch.call(el, selector);
-	}
-
-} else {
-
-	console.warn("Warning: using slow matchesSelector()");
-	
-	var indexOf = Array.prototype.indexOf;
-	exports.matchesSelector = function(selector, el) {
-		return indexOf.call(document.querySelectorAll(selector), el) >= 0;
-	}
-
-}
-
-},{}],7:[function(require,module,exports){
-exports.isElement = function(el) {
-	return el && el.nodeType === 1;
-}
-
-exports.replace = function(oldEl, newEl) {
-	oldEl.parentNode.replaceChild(newEl, oldEl);
-}
-},{}],8:[function(require,module,exports){
-// http://stackoverflow.com/questions/1248081/get-the-browser-viewport-dimensions-with-javascript
-exports.viewportSize = function() {
-	return {
-	    width: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
-	    height: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
-	};
-}
-},{}],9:[function(require,module,exports){
-var du = module.exports = {};
-
-extend(require('./impl/classes'));
-extend(require('./impl/events'));
-extend(require('./impl/layout'));
-extend(require('./impl/matches_selector'));
-extend(require('./impl/node'));
-extend(require('./impl/viewport'));
-
-function extend(things) {
-    for (var k in things) {
-        du[k] = things[k];
+    for (var k in extras) {
+        this._codeToId[k] = extras[k];
+        this._idToCode[extras[k]] = k;
     }
 }
 
-},{"./impl/classes":3,"./impl/events":4,"./impl/layout":5,"./impl/matches_selector":6,"./impl/node":7,"./impl/viewport":8}]},{},[1])
+Mapping.prototype.keyIdForCode = function(code) {
+    return this._codeToId[code];
+}
+
+Mapping.prototype.nameForCode = function(code) {
+    return Names[code];
+}
+
+Mapping.prototype.codeForKeyId = function(keyId) {
+    return this._idToCode[keyId]
+}
+
+Mapping.prototype.nameForKeyId = function(keyId) {
+    var code = this._idToCode(keyId);
+    if (!code) return void 0;
+    return Names[code];
+}
+
+var Names = {
+    'backspace' : 'Backspace',
+    'tab'       : 'Tab',
+    'enter'     : 'Enter',
+    'capslock'  : 'Caps Lock',
+    'escape'    : 'Escape',
+    'space'     : 'Space',
+    'pageup'    : 'Page Up',
+    'pagedown'  : 'Page Down',
+    'end'       : 'End',
+    'home'      : 'Home',
+    'left'      : 'Left Arrow',
+    'up'        : 'Up Arrow',
+    'right'     : 'Right Arrow',
+    'down'      : 'Down Arrow',
+    'insert'    : 'Insert',
+    'delete'    : 'Delete',
+    'winkey'    : 'Windows Key',
+    'winmenu'   : 'Windows Menu'
+};
+
+function Globals() {};
+Globals.prototype = {
+    8       : 'backspace',
+    9       : 'tab',
+    13      : 'enter',
+    20      : 'capslock',
+    27      : 'escape',
+    32      : 'space',
+    33      : 'pageup',
+    34      : 'pagedown',
+    35      : 'end',
+    36      : 'home',
+    37      : 'left',
+    38      : 'up',
+    39      : 'right',
+    40      : 'down',
+    45      : 'insert',
+    46      : 'delete',
+    188     : ',',
+    190     : '.',
+    191     : '/',
+    192     : '`',
+    219     : '[',
+    220     : '\\',
+    221     : ']',
+    222     : "'"
+};
+
+// 0-9
+for (var i = 48; i <= 57; ++i) {
+    var keyId = ('' + (i - 48));
+    Names[keyId] = keyId;
+    Globals.prototype[i] = keyId;
+}
+
+// A-Z
+for (var i = 65; i <= 90; ++i) {
+    var keyId = String.fromCharCode(i).toLowerCase();
+    Names[keyId] = keyId.toUpperCase();
+    Globals.prototype[i] = keyId;
+}
+
+// F1-F12
+for (var i = 112; i <= 123; ++i) {
+    var keyId = 'f' + (i - 111);
+    Names[keyId] = keyId.toUpperCase();
+    Globals.prototype[i] = keyId;
+}
+
+var GlobalsReverse = function() {};
+for (var k in Globals.prototype) {
+    GlobalsReverse.prototype[Globals.prototype[k]] = k;
+}
+
+exports.defaults = new Mapping({
+    186 : ';',
+    187 : '=',
+    189 : '-',
+    91  : 'winkey',
+    93  : 'winmenu'
+});
+
+exports.firefox = new Mapping({
+    59  : ';',
+    61  : '=',
+    173 : '-',
+    91  : 'winkey',
+    93  : 'winmenu'
+});
+
+exports.opera = new Mapping({
+    59  : ';',
+    61  : '=',
+    109 : '-',
+    219 : 'winkey',
+    0   : 'winmenu'
+});
+
+//
+// Alternative key IDs...
+
+var ALTS = {
+    'bksp'      : 'backspace',
+    'del'       : 'delete',
+    'esc'       : 'escape',
+    'ins'       : 'insert',
+    'pgup'      : 'pageup',
+    'pgdown'    : 'pagedown',
+    'return'    : 'enter'
+};
+
+exports.normalizeKeyId = function(keyId) {
+
+    keyId = keyId.toLowerCase();
+    if (keyId.length > 1) {
+        keyId = keyId.replace(/-/g, '');
+    }
+
+    return ALTS[keyId] || keyId;
+
+}
+
+},{}],8:[function(require,module,exports){
+var Hotkey = require('./Hotkey');
+
+var normalize = require('./keycodes').normalizeKeyId;
+
+module.exports = function(str) {
+    
+    var hotkey = new Hotkey();
+
+    str.trim().split(/\s+/).forEach(function(c) {
+        if (c.match(/alt|option/i)) {
+            hotkey.alt = true;
+        } else if (c.match(/cmd|command|meta/i)) {
+            hotkey.meta = true;
+        } else if (c.match(/control|ctl|ctrl/i)) {
+            hotkey.ctrl = true;
+        } else if (c.match(/shift/i)) {
+            hotkey.shift = true;
+        } else if (c === '!') {
+            hotkey.allowRepeat = false;
+        } else {
+            hotkey.ch = normalize(c);
+        }
+    });
+
+    if (!hotkey.ch) {
+        throw new Error("invalid hotkey: no key ID specified");
+    }
+    
+    return hotkey;
+
+}
+},{"./Hotkey":4,"./keycodes":7}]},{},[1])

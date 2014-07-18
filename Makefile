@@ -1,4 +1,4 @@
-SRC := index.js
+SRC := index.js $(shell find lib *.js)
 
 .PHONY: all
 
