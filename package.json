@@ -4,7 +4,9 @@
   "description": "Hotkey manager based on useCapture; IE9+.",
   "main": "index.js",
   "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "uglify-js": "~2.4.15"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

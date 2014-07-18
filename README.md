@@ -14,6 +14,10 @@ Require it:
 
 	var hotkeys = require('hotkeys');
 
+### UMD
+
+Copy and paste either `build/hotkeys.js` or `build/hotkeys.min.js` into your project.
+
 ## API
 
 ### Dispatcher
@@ -48,6 +52,6 @@ Get or set the default keycode mapping. See "Browser Compatibility", below.
 
 ## Browser Compatibility
 
-`hotkeys` supports differences between reported `keyCodes` for various browsers. Variants for Firefox, Opera and Chrome/IE/Safari are supplied out of the box but it's trivial to add new mappings - check out `lib/keycodes.js` for the gory details.
+`hotkeys` supports differences between reported `keyCodes` for various browsers. Variants for Firefox, Opera and Chrome/IE/Safari are supplied out of the box and it's trivial to add new mappings - check out `lib/keycodes.js` for the gory details.
 
-To set up `hotkeys` for specific browser support call `hotkeys.defaultKeycodes()` before calling any other library functions. Valid arguments are either `defaults` (for Chrome/IE/Safari), `firefox` or `opera`. Browser detection is the responsibility of your code, it is not included in the `hotkeys` library.
+To set up `hotkeys` for specific browser support call `hotkeys.defaultKeycodes()` before calling any other library functions. Valid arguments are either `"defaults"` (for Chrome/IE/Safari), `"firefox"` or `"opera"`. Browser detection is the responsibility of your code, it is not included in the `hotkeys` library.
