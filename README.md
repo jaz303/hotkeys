@@ -55,3 +55,9 @@ Get or set the default keycode mapping. See "Browser Compatibility", below.
 `hotkeys` supports differences between reported `keyCodes` for various browsers. Variants for Firefox, Opera and Chrome/IE/Safari are supplied out of the box and it's trivial to add new mappings - check out `lib/keycodes.js` for the gory details.
 
 To set up `hotkeys` for specific browser support call `hotkeys.defaultKeycodes()` before calling any other library functions. Valid arguments are either `"defaults"` (for Chrome/IE/Safari), `"firefox"` or `"opera"`. Browser detection is the responsibility of your code, it is not included in the `hotkeys` library.
+
+## Copyright &amp; License
+
+&copy; 2014 Jason Frame [ [@jaz303](http://twitter.com/jaz303) / [jason@onehackoranother.com](mailto:jason@onehackoranother.com) ]
+
+Released under the ISC license.
