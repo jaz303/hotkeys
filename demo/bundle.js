@@ -24,14 +24,13 @@ window.init = function() {
 }
 },{"..":2}],2:[function(require,module,exports){
 module.exports = {
-	defaultKeycodes 	: require('./lib/default_keycodes'),
-	Dispatcher 			: require('./lib/Dispatcher'),
-	Hotkey 				: require('./lib/Hotkey'),
-	keycodes 			: require('./lib/keycodes'),
-	Keymap 				: require('./lib/Keymap'),
-	parseKeyCombo		: require('./lib/parse_key_combo')
+    defaultKeycodes     : require('./lib/default_keycodes'),
+    Dispatcher          : require('./lib/Dispatcher'),
+    Hotkey              : require('./lib/Hotkey'),
+    Keymap              : require('./lib/Keymap'),
+    parseKeyCombo       : require('./lib/parse_key_combo')
 };
-},{"./lib/Dispatcher":3,"./lib/Hotkey":4,"./lib/Keymap":5,"./lib/default_keycodes":6,"./lib/keycodes":7,"./lib/parse_key_combo":8}],3:[function(require,module,exports){
+},{"./lib/Dispatcher":3,"./lib/Hotkey":4,"./lib/Keymap":5,"./lib/default_keycodes":6,"./lib/parse_key_combo":8}],3:[function(require,module,exports){
 module.exports = Dispatcher;
 
 var Keymap          = require('./Keymap');
@@ -157,7 +156,7 @@ function Binding(keymap, hotkey, action) {
 }
 
 Binding.prototype.remove = function() {
-    this.keymap.removeBinding(this);
+    this.keymap.remove(this);
 }
 },{"./default_keycodes":6,"./parse_key_combo":8}],6:[function(require,module,exports){
 var keycodes = require('./keycodes');
@@ -166,15 +165,15 @@ var defaults = keycodes.defaults;
 
 module.exports = function(newDefaults) {
 
-	if (!newDefaults) {
-		return defaults;
-	}
+    if (!newDefaults) {
+        return defaults;
+    }
 
-	if (typeof newDefaults === 'string') {
-		newDefaults = keycodes[newDefaults];
-	}
+    if (typeof newDefaults === 'string') {
+        newDefaults = keycodes[newDefaults];
+    }
 
-	defaults = newDefaults;
+    defaults = newDefaults;
 
 }
 },{"./keycodes":7}],7:[function(require,module,exports){
