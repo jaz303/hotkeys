@@ -1,0 +1,26 @@
+{
+  "name": "hotkeys",
+  "version": "0.0.1",
+  "description": "Hotkey manager based on useCapture; IE9+.",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jaz303/hotkeys.git"
+  },
+  "keywords": [
+    "hotkey",
+    "manager",
+    "useCapture"
+  ],
+  "author": "Jason Frame <jason@onehackoranother.com> (http://jasonframe.co.uk)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jaz303/hotkeys/issues"
+  },
+  "homepage": "https://github.com/jaz303/hotkeys"
+}
