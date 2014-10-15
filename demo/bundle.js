@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var hotkeys = require('..');
 
 window.init = function() {
@@ -34,7 +34,6 @@ module.exports = {
 module.exports = Dispatcher;
 
 var Keymap          = require('./Keymap');
-var parseKeyCombo   = require('./parse_key_combo');
 
 function Dispatcher(el, keymap) {
     this._root = el || document.body;
@@ -47,13 +46,7 @@ Dispatcher.prototype.getKeymap = function() {
 }
 
 Dispatcher.prototype.on = function(hotkey, fn) {
-
-    if (typeof hotkey === 'string') {
-        hotkey = parseKeyCombo(hotkey);
-    }
-
     return this._keymap.bind(hotkey, fn);
-
 }
 
 Dispatcher.prototype._dispatch = function(evt) {
@@ -66,7 +59,7 @@ Dispatcher.prototype._dispatch = function(evt) {
     }
 
 }
-},{"./Keymap":5,"./parse_key_combo":8}],4:[function(require,module,exports){
+},{"./Keymap":5}],4:[function(require,module,exports){
 module.exports = Hotkey;
 
 function Hotkey() {
@@ -107,6 +100,10 @@ function Keymap(keycodes) {
 }
 
 Keymap.prototype.bind = function(hotkey, action) {
+
+    if (typeof hotkey === 'string') {
+        hotkey = parseKeyCombo(hotkey);
+    }
     
     var binding = new Binding(this, hotkey, action);
 
@@ -311,12 +308,14 @@ exports.opera = new Mapping({
 
 var ALTS = {
     'bksp'      : 'backspace',
+    'caps'      : 'capslock',
     'del'       : 'delete',
     'esc'       : 'escape',
     'ins'       : 'insert',
     'pgup'      : 'pageup',
     'pgdown'    : 'pagedown',
-    'return'    : 'enter'
+    'return'    : 'enter',
+    'win'       : 'winkey'
 };
 
 exports.normalizeKeyId = function(keyId) {
@@ -362,4 +361,4 @@ module.exports = function(str) {
     return hotkey;
 
 }
-},{"./Hotkey":4,"./keycodes":7}]},{},[1])
+},{"./Hotkey":4,"./keycodes":7}]},{},[1]);

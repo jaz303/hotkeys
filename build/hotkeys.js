@@ -1,16 +1,15 @@
-!function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.hotkeys=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.hotkeys=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = {
-    defaultKeycodes     : _dereq_('./lib/default_keycodes'),
-    Dispatcher          : _dereq_('./lib/Dispatcher'),
-    Hotkey              : _dereq_('./lib/Hotkey'),
-    Keymap              : _dereq_('./lib/Keymap'),
-    parseKeyCombo       : _dereq_('./lib/parse_key_combo')
+    defaultKeycodes     : require('./lib/default_keycodes'),
+    Dispatcher          : require('./lib/Dispatcher'),
+    Hotkey              : require('./lib/Hotkey'),
+    Keymap              : require('./lib/Keymap'),
+    parseKeyCombo       : require('./lib/parse_key_combo')
 };
-},{"./lib/Dispatcher":2,"./lib/Hotkey":3,"./lib/Keymap":4,"./lib/default_keycodes":5,"./lib/parse_key_combo":7}],2:[function(_dereq_,module,exports){
+},{"./lib/Dispatcher":2,"./lib/Hotkey":3,"./lib/Keymap":4,"./lib/default_keycodes":5,"./lib/parse_key_combo":7}],2:[function(require,module,exports){
 module.exports = Dispatcher;
 
-var Keymap          = _dereq_('./Keymap');
-var parseKeyCombo   = _dereq_('./parse_key_combo');
+var Keymap          = require('./Keymap');
 
 function Dispatcher(el, keymap) {
     this._root = el || document.body;
@@ -23,13 +22,7 @@ Dispatcher.prototype.getKeymap = function() {
 }
 
 Dispatcher.prototype.on = function(hotkey, fn) {
-
-    if (typeof hotkey === 'string') {
-        hotkey = parseKeyCombo(hotkey);
-    }
-
     return this._keymap.bind(hotkey, fn);
-
 }
 
 Dispatcher.prototype._dispatch = function(evt) {
@@ -42,7 +35,7 @@ Dispatcher.prototype._dispatch = function(evt) {
     }
 
 }
-},{"./Keymap":4,"./parse_key_combo":7}],3:[function(_dereq_,module,exports){
+},{"./Keymap":4}],3:[function(require,module,exports){
 module.exports = Hotkey;
 
 function Hotkey() {
@@ -71,11 +64,11 @@ Hotkey.prototype.matchesEvent = function(ch, evt) {
         && evt.shiftKey === this.shift
         && (!evt.repeat || this.allowRepeat)
 }
-},{}],4:[function(_dereq_,module,exports){
+},{}],4:[function(require,module,exports){
 module.exports = Keymap;
 
-var defaultKeycodes = _dereq_('./default_keycodes');
-var parseKeyCombo = _dereq_('./parse_key_combo');
+var defaultKeycodes = require('./default_keycodes');
+var parseKeyCombo = require('./parse_key_combo');
 
 function Keymap(keycodes) {
     this._keycodes = keycodes || defaultKeycodes();
@@ -83,6 +76,10 @@ function Keymap(keycodes) {
 }
 
 Keymap.prototype.bind = function(hotkey, action) {
+
+    if (typeof hotkey === 'string') {
+        hotkey = parseKeyCombo(hotkey);
+    }
     
     var binding = new Binding(this, hotkey, action);
 
@@ -134,8 +131,8 @@ function Binding(keymap, hotkey, action) {
 Binding.prototype.remove = function() {
     this.keymap.remove(this);
 }
-},{"./default_keycodes":5,"./parse_key_combo":7}],5:[function(_dereq_,module,exports){
-var keycodes = _dereq_('./keycodes');
+},{"./default_keycodes":5,"./parse_key_combo":7}],5:[function(require,module,exports){
+var keycodes = require('./keycodes');
 
 var defaults = keycodes.defaults;
 
@@ -152,7 +149,7 @@ module.exports = function(newDefaults) {
     defaults = newDefaults;
 
 }
-},{"./keycodes":6}],6:[function(_dereq_,module,exports){
+},{"./keycodes":6}],6:[function(require,module,exports){
 // based on http://www.javascripter.net/faq/keycodes.htm
 
 function Mapping(extras) {
@@ -287,12 +284,14 @@ exports.opera = new Mapping({
 
 var ALTS = {
     'bksp'      : 'backspace',
+    'caps'      : 'capslock',
     'del'       : 'delete',
     'esc'       : 'escape',
     'ins'       : 'insert',
     'pgup'      : 'pageup',
     'pgdown'    : 'pagedown',
-    'return'    : 'enter'
+    'return'    : 'enter',
+    'win'       : 'winkey'
 };
 
 exports.normalizeKeyId = function(keyId) {
@@ -306,10 +305,10 @@ exports.normalizeKeyId = function(keyId) {
 
 }
 
-},{}],7:[function(_dereq_,module,exports){
-var Hotkey = _dereq_('./Hotkey');
+},{}],7:[function(require,module,exports){
+var Hotkey = require('./Hotkey');
 
-var normalize = _dereq_('./keycodes').normalizeKeyId;
+var normalize = require('./keycodes').normalizeKeyId;
 
 module.exports = function(str) {
     
@@ -338,6 +337,5 @@ module.exports = function(str) {
     return hotkey;
 
 }
-},{"./Hotkey":3,"./keycodes":6}]},{},[1])
-(1)
+},{"./Hotkey":3,"./keycodes":6}]},{},[1])(1)
 });
